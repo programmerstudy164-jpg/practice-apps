@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Practice App</title>
+  <style>
+    body { font-family: sans-serif; max-width: 520px; margin: 40px auto; padding: 0 16px; }
+    input, button { padding: 8px; font-size: 16px; margin: 4px 0; width: 100%; box-sizing: border-box; }
+    button { cursor: pointer; }
+    .msg { border-bottom: 1px solid #ccc; padding: 8px 0; }
+    .msg small { color: #666; }
+    #status { color: #b00; }
+  </style>
+</head>
+<body>
+  <h1>Guestbook</h1>
+  <input id="name" placeholder="Pangalan" maxlength="50" />
+  <input id="text" placeholder="Message" maxlength="200" />
+  <button id="send">Ipadala</button>
+  <p id="status"></p>
+  <div id="list"></div>
+
+  <script>
+    const list = document.getElementById("list");
+    const status = document.getElementById("status");
+
+    // textContent ang gamit (hindi innerHTML) para iwas XSS
+    async function loadMessages() {
+      try {
+        const res = await fetch("/api/messages");
+        const rows = await res.json();
+        list.innerHTML = "";
+        rows.forEach((m) => {
+          const div = document.createElement("div");
+          div.className = "msg";
+          const strong = document.createElement("strong");
+          strong.textContent = m.name;
+          const p = document.createElement("div");
+          p.textContent = m.text;
+          const small = document.createElement("small");
+          small.textContent = new Date(m.created_at).toLocaleString();
+          div.append(strong, p, small);
+          list.appendChild(div);
+        });
+      } catch {
+        status.textContent = "Hindi maabot ang backend.";
+      }
+    }
+
+    document.getElementById("send").addEventListener("click", async () => {
+      status.textContent = "";
+      const name = document.getElementById("name").value;
+      const text = document.getElementById("text").value;
+      const res = await fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, text }),
+      });
+      if (!res.ok) {
+        status.textContent = "May error. Punan ang name at message.";
+        return;
+      }
+      document.getElementById("text").value = "";
+      loadMessages();
+    });
+
+    loadMessages();
+  </script>
+</body>
+</html>
