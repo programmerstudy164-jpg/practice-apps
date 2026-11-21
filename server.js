@@ -6,14 +6,35 @@ const { Pool } = require("pg");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT || 5432,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  max: 5,
-});
+// Sa Render: DATABASE_URL. Sa laptop at Docker: DB_HOST, DB_USER, atbp.
+const pool = new Pool(
+  process.env.DATABASE_URL
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false },
+        max: 5,
+      }
+    : {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT || 5432,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
+        max: 5,
+      }
+);
+
+// Gagawa ng table kung wala pa (para hindi na kailangan ng manual na schema.sql sa Render)
+pool
+  .query(
+    `CREATE TABLE IF NOT EXISTS messages (
+       id SERIAL PRIMARY KEY,
+       name VARCHAR(50) NOT NULL,
+       text VARCHAR(200) NOT NULL,
+       created_at TIMESTAMPTZ DEFAULT NOW()
+     )`
+  )
+  .catch((err) => console.error("Hindi nagawa ang table:", err.message));
 
 app.use(express.json());
 
