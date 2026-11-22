@@ -14,7 +14,7 @@
   </style>
 </head>
 <body>
-  <h1>Guestbook</h1>
+  <p id="version">Bersyon 2: na-deploy gamit ang CI/CD ✅</p>
   <input id="name" placeholder="Pangalan" maxlength="50" />
   <input id="text" placeholder="Message" maxlength="200" />
   <button id="send">Ipadala</button>
@@ -22,7 +22,7 @@
   <div id="list"></div>
 
   <script>
-    const  = document.getElementById("list");
+    const list = document.getElementById("list");
     const status = document.getElementById("status");
 
     // textContent ang gamit (hindi innerHTML) para iwas XSS

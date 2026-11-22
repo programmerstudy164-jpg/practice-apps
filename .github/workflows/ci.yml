@@ -41,7 +41,7 @@ jobs:
       - name: Syntax check
         run: node --check server.js
 
-      - name: Smoke test ng API
+      - name: Smoke test ng API at frontend
         env:
           PORT: 3000
           DB_HOST: localhost
@@ -59,6 +59,8 @@ jobs:
           echo
           curl --fail --silent http://localhost:3000/api/messages
           echo
+          curl --fail --silent http://localhost:3000/ | grep -q "Bersyon 2"
+          echo "Frontend OK"
 
       - name: I-build ang Docker image
         run: docker build -t practice-backend .
