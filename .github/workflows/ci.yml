@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test_user -d test_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Kunin ang code
+        uses: actions/checkout@v4
+
+      - name: I-setup ang Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: I-install ang dependencies
+        run: npm ci
+
+      - name: Syntax check
+        run: node --check server.js
+
+      - name: Smoke test ng API
+        env:
+          PORT: 3000
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: test_user
+          DB_PASSWORD: test_password
+          DB_NAME: test_db
+        run: |
+          node server.js &
+          sleep 5
+          curl --fail --silent http://localhost:3000/api/hello
+          echo
+          curl --fail --silent -X POST -H "Content-Type: application/json" \
+            -d '{"name":"ci","text":"hello from ci"}' http://localhost:3000/api/messages
+          echo
+          curl --fail --silent http://localhost:3000/api/messages
+          echo
+
+      - name: I-build ang Docker image
+        run: docker build -t practice-backend .
